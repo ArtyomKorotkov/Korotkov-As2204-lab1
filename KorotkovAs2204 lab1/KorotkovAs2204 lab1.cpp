@@ -83,6 +83,24 @@ void SaveKS(ofstream& fout, const KS& ks)
         << ks.amountWorkingShop << endl
         << ks.KPD << endl;
 }
+Pipe LoadPipes(ifstream& fin)
+{
+    Pipe pip;
+    fin >> pip.name;
+    fin >> pip.length;
+    fin >> pip.diameter;
+    fin >> pip.repair;
+    return pip;
+}
+KS LoadKS(ifstream& fin)
+{
+    KS ks;
+    fin >> ks.name;
+    fin >> ks.amoutOfShop;
+    fin >> ks.amountWorkingShop;
+    fin >> ks.KPD;
+    return ks;
+}
 void PrintMenu()
 {
     cout << "1. Add pipe" << endl
@@ -141,10 +159,10 @@ int main()
             fout.open("data.txt", ios::out);
             if (fout.is_open())
             {
-                cout << "OK";
-                fout << "Vse ok" << endl;
+                fout<<muchPipes.size()<<endl;
                 for (Pipe pip : muchPipes)
                     SavePipes(fout, pip);
+                fout << muchKS.size() << endl;
                 for (KS ks : muchKS)
                     SaveKS(fout, ks);
                 fout.close();
@@ -153,6 +171,19 @@ int main()
         }
         case 7:
         {
+            ifstream fin;
+            fin.open("data.txt", ios::in);
+            if (fin.is_open())
+            {
+                int countForPipes;
+                int countForKS;
+                fin >> countForPipes;
+                while (countForPipes--)
+                    muchPipes.push_back(LoadPipes(fin));
+                fin >> countForKS;
+                while (countForKS--)
+                    muchKS.push_back(LoadKS(fin));
+            }
             break;
         }
         case 0:
