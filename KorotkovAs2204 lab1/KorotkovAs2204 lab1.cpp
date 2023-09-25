@@ -1,6 +1,7 @@
 ﻿
 #include <vector>
 #include <iostream>
+#include <fstream>
 using namespace std;
 template <typename t>
 t getCorrectNumber(t min, t max)
@@ -68,7 +69,20 @@ ostream& operator << (ostream& out, const KS& ks)
         << "\tKPD:" << ks.KPD << endl;
     return out;
 }
-
+void SavePipes(ofstream& fout, const Pipe& pipe)
+{
+    fout << pipe.name << endl
+        << pipe.length << endl
+        << pipe.diameter << endl
+        << pipe.repair << endl;
+}
+void SaveKS(ofstream& fout, const KS& ks)
+{
+    fout << ks.name << endl
+        << ks.amoutOfShop << endl
+        << ks.amountWorkingShop << endl
+        << ks.KPD << endl;
+}
 void PrintMenu()
 {
     cout << "1. Add pipe" << endl
@@ -106,10 +120,10 @@ int main()
         case 3:
         {
             cout << "Pipes:" << endl;
-            for (auto& pip : muchPipes)
+            for (Pipe& pip : muchPipes)
                 cout << pip << endl;
             cout << "KS:" << endl;
-            for (auto& ks : muchKS)
+            for (KS& ks : muchKS)
                 cout << ks << endl;
             break;
         }
@@ -123,6 +137,18 @@ int main()
         }
         case 6:
         {
+            ofstream fout;
+            fout.open("data.txt", ios::out);
+            if (fout.is_open())
+            {
+                cout << "OK";
+                fout << "Vse ok" << endl;
+                for (Pipe pip : muchPipes)
+                    SavePipes(fout, pip);
+                for (KS ks : muchKS)
+                    SaveKS(fout, ks);
+                fout.close();
+            }
             break;
         }
         case 7:
