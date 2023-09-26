@@ -101,6 +101,18 @@ KS LoadKS(ifstream& fin)
     fin >> ks.KPD;
     return ks;
 }
+void EditPipe(Pipe& pipe)
+{
+    pipe.repair = (pipe.repair=="Yes")? "No" : "Yes";
+}
+void EditKS(KS& ks)
+{
+    cout << "Type how much working shop you have:";
+    ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
+    double usefulA = ks.amountWorkingShop;
+    double A = ks.amoutOfShop;
+    ks.KPD = usefulA / A;
+}
 void PrintMenu()
 {
     cout << "1. Add pipe" << endl
@@ -114,8 +126,8 @@ void PrintMenu()
 }
 int main()
 {
-    vector  <Pipe> muchPipes;
-    vector <KS> muchKS;
+    Pipe pipe;
+    KS ks;
     while (1) 
     {
         PrintMenu();
@@ -123,34 +135,32 @@ int main()
         {
         case 1:
         {
-            Pipe pipe;
             cin >> pipe;
-            muchPipes.push_back(pipe);
             break;
         }
         case 2:
         {
-            KS ks;
             cin >> ks;
-            muchKS.push_back(ks);
             break;
         }
         case 3:
         {
-            cout << "Pipes:" << endl;
-            for (Pipe& pip : muchPipes)
-                cout << pip << endl;
-            cout << "KS:" << endl;
-            for (KS& ks : muchKS)
+            cout << "Pipes:" << endl<<"\n";
+            if (!pipe.name.empty())
+                cout << pipe << endl;
+            cout << "KS:" << endl<<"\n";
+            if (!ks.name.empty())
                 cout << ks << endl;
             break;
         }
         case 4:
         {
+            EditPipe(pipe);
             break;
         }
         case 5:
         {
+            EditKS(ks);
             break;
         }
         case 6:
@@ -159,14 +169,10 @@ int main()
             fout.open("data.txt", ios::out);
             if (fout.is_open())
             {
-                fout<<muchPipes.size()<<endl;
-                for (Pipe pip : muchPipes)
-                    SavePipes(fout, pip);
-                fout << muchKS.size() << endl;
-                for (KS ks : muchKS)
-                    SaveKS(fout, ks);
-                fout.close();
+                SavePipes(fout, pipe);
+                SaveKS(fout, ks);
             }
+            fout.close();
             break;
         }
         case 7:
@@ -175,15 +181,10 @@ int main()
             fin.open("data.txt", ios::in);
             if (fin.is_open())
             {
-                int countForPipes;
-                int countForKS;
-                fin >> countForPipes;
-                while (countForPipes--)
-                    muchPipes.push_back(LoadPipes(fin));
-                fin >> countForKS;
-                while (countForKS--)
-                    muchKS.push_back(LoadKS(fin));
+                pipe = LoadPipes(fin);
+                ks = LoadKS(fin);
             }
+            fin.close();
             break;
         }
         case 0:
@@ -191,6 +192,5 @@ int main()
             return 0;
         }
         }
-
     }
 }
