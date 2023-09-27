@@ -1,5 +1,4 @@
 ﻿
-#include <vector>
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -145,12 +144,16 @@ int main()
         }
         case 3:
         {
-            cout << "Pipes:" << endl<<"\n";
+            cout << "Pipes:" << endl;
             if (!pipe.name.empty())
                 cout << pipe << endl;
-            cout << "KS:" << endl<<"\n";
+            else
+                cout << "Not found" << endl;
+            cout << "KS:" << endl;
             if (!ks.name.empty())
                 cout << ks << endl;
+            else
+                cout << "Not found" << endl;
             break;
         }
         case 4:
