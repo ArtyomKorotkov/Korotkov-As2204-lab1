@@ -2,10 +2,9 @@
 #include <iostream>
 #include <fstream>
 using namespace std;
-template <typename t>
-t getCorrectNumber(t min, t max)
+int getCorrectNumber(int min, int max)
 {
-    t x;
+    int x;
     while ((cin >> x).fail() || x < min || x>max)
     {
         cin.clear();
