@@ -1,6 +1,8 @@
 ﻿
 #include <iostream>
 #include <fstream>
+#include <string>
+
 using namespace std;
 int getCorrectNumber(int min, int max)
 {
@@ -17,38 +19,48 @@ struct Pipe{
     string name;
     double length;
     double diameter;
-    string repair;
+    bool repair;
 };
 
 struct KS {
     string name;
     int amoutOfShop;
     int amountWorkingShop;
-    double KPD;
+    string effectiveness;
 };
 istream& operator >> (istream& in, Pipe& pipe)
 {
     cout << "Type name:";
-    in >> pipe.name;
+    in.ignore();
+    getline(in,pipe.name);
     cout << "Type lenght:";
     pipe.length = getCorrectNumber(50, 200);
     cout << "Type diameter:";
     pipe.diameter = getCorrectNumber(8, 35);
     cout << "Is this pipe in repair?(Yes-1,No-0)";
-    pipe.repair = (getCorrectNumber(0, 1)==1) ? "Yes":"No";
+    pipe.repair = getCorrectNumber(0, 1);
     return in;
+}
+string getTypeOfEffectiveness(int Number)
+{
+    if (Number == 1)
+        return "Low";
+    else if (Number == 2)
+        return "Midle";
+    else
+        return "Hight";
 }
 istream& operator >> (istream& in, KS& ks)
 {
     cout << "Type name:";
-    in >> ks.name;
+    in.ignore();
+    getline(in, ks.name);
     cout << "Type how much shop you have:";
-    ks.amoutOfShop = getCorrectNumber(0, 10000) ;
+    ks.amoutOfShop = getCorrectNumber(1, 10000) ;
     cout << "Type how much working shop you have:";
     ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
-    double usefulA = ks.amountWorkingShop;
-    double A = ks.amoutOfShop;
-    ks.KPD = usefulA / A;
+    cout << "Type what is effectiveness you have\n 1-Low \n 2-Midle \n 3-Hight" << endl;
+    ks.effectiveness = getTypeOfEffectiveness(getCorrectNumber(1,3));
     return in;
 }
 ostream& operator << (ostream& out, const Pipe& pip)
@@ -64,7 +76,7 @@ ostream& operator << (ostream& out, const KS& ks)
     out << "Name:" << ks.name
         << "\tAmount of shop:" << ks.amoutOfShop
         << "\tAmount of working shop:" << ks.amountWorkingShop
-        << "\tKPD:" << ks.KPD << endl;
+        << "\tEffectiveness:" << ks.effectiveness << endl;
     return out;
 }
 void SavePipes(ofstream& fout, const Pipe& pipe)
@@ -79,12 +91,13 @@ void SaveKS(ofstream& fout, const KS& ks)
     fout << ks.name << endl
         << ks.amoutOfShop << endl
         << ks.amountWorkingShop << endl
-        << ks.KPD << endl;
+        << ks.effectiveness << endl;
 }
 Pipe LoadPipes(ifstream& fin)
 {
     Pipe pip;
-    fin >> pip.name;
+    fin.ignore();
+    getline(fin,pip.name);
     fin >> pip.length;
     fin >> pip.diameter;
     fin >> pip.repair;
@@ -93,23 +106,29 @@ Pipe LoadPipes(ifstream& fin)
 KS LoadKS(ifstream& fin)
 {
     KS ks;
-    fin >> ks.name;
+    fin.ignore();
+    getline(fin,ks.name);
     fin >> ks.amoutOfShop;
     fin >> ks.amountWorkingShop;
-    fin >> ks.KPD;
+    fin >> ks.effectiveness;
     return ks;
 }
 void EditPipe(Pipe& pipe)
 {
-    pipe.repair = (pipe.repair=="Yes")? "No" : "Yes";
+    if (!pipe.name.empty())
+        pipe.repair = !pipe.repair;// == "Yes") ? "No" : "Yes
+    else
+        cout << "Please load or input pipe" << endl;
 }
 void EditKS(KS& ks)
 {
-    cout << "Type how much working shop you have:";
-    ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
-    double usefulA = ks.amountWorkingShop;
-    double A = ks.amoutOfShop;
-    ks.KPD = usefulA / A;
+    if (!ks.name.empty())
+    {
+        cout << "Type how much working shop you have:";
+        ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
+    }
+    else
+        cout << "Please load or input ks" << endl;
 }
 void PrintMenu()
 {
@@ -171,8 +190,21 @@ int main()
             fout.open("data.txt", ios::out);
             if (fout.is_open())
             {
-                SavePipes(fout, pipe);
-                SaveKS(fout, ks);
+                if (!pipe.name.empty()) 
+                {
+                    fout << 1<<endl;
+                    SavePipes(fout, pipe);
+                }
+                else
+                    fout << 0<<endl;
+                if (!ks.name.empty()) 
+                {
+                    fout <<1<<endl;
+                    SaveKS(fout, ks);
+                }
+                else
+                    fout << 0<<endl;
+
             }
             fout.close();
             break;
@@ -183,8 +215,14 @@ int main()
             fin.open("data.txt", ios::in);
             if (fin.is_open())
             {
-                pipe = LoadPipes(fin);
-                ks = LoadKS(fin);
+                string existPipe;
+                string existKS;
+                fin >> existPipe;
+                if (existPipe == "1")
+                    pipe = LoadPipes(fin);
+                fin >> existKS;
+                if (existKS=="1")
+                    ks = LoadKS(fin);
             }
             fin.close();
             break;
