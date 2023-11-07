@@ -71,6 +71,8 @@ void PrintMenu()
         << "5. Edit KS" << endl
         << "6. Save" << endl
         << "7. Load" << endl
+        << "8. Search Pipe" << endl
+        << "9. Search KS" << endl
         << "0. Exit" << endl;
 }
 template <typename t>
@@ -85,14 +87,66 @@ t& Select(vector<t>& group)
     }
     
 }
+template <typename T>
+using FilterPipe = bool(*)(const Pipe& pipe, T param);
+
+
+template <typename T>
+using FilterKS = bool(*)(const KS& ks, T param);
+
+template <typename T>
+bool checkByName(const T& object, string param)
+{
+    return object.name == param;
+}
+bool checkByRepair(const Pipe& pipe, bool param)
+{
+    return pipe.repair == param;
+}
+bool checkByUnusedWorkshops(const KS& ks, double param)
+{
+    double percentOfUnusedWorkshops = (double (ks.amoutOfShop - ks.amountWorkingShop) * 100) / ks.amoutOfShop;
+    return percentOfUnusedWorkshops >=param;
+}
+template <typename T>
+
+vector <int> FindPipebyFilter(const vector<Pipe>& groupOfPipe,FilterPipe<T> f, T param)
+{
+    vector <int> res;
+    int i = 0;
+    for (auto& pipe : groupOfPipe)
+    {
+        if (f(pipe,param))
+            res.push_back(i);
+        i++;
+    }
+    return res;
+}
+
+template <typename T>
+vector <int> FindKSbyFilter(const vector<KS>& groupOfKs, FilterKS<T> f, T param)
+{
+    vector <int> res;
+    int i = 0;
+    for (auto& KS : groupOfKs)
+    {
+        if (f(KS, param))
+            res.push_back(i);
+        i++;
+    }
+    return res;
+}
 int main()
 {
+    double d;
+    d = getCorrectNumber(0., 100.);
+    cout<<d<< endl;
     vector <Pipe> groupOfPipe;
     vector <KS> groupOfKs;
     while (1) 
     {
         PrintMenu();
-        switch (getCorrectNumber(0,7))
+        switch (getCorrectNumber(0,9))
         {
         case 1:
         {
@@ -166,6 +220,57 @@ int main()
                 while (countOfKS--)
                     groupOfKs.push_back(LoadKS(fin));
                 fin.close();
+            }
+            break;
+        }
+        case 8:
+        {
+            int choose;
+            cout << "Search pipe by name(1) by status of repair(2): ";
+            choose = getCorrectNumber(1, 2);
+            if (choose==1)
+            {
+                string name;
+                cout << "Type the name of pipe:" << endl;
+                cin.clear();
+                cin.ignore(INT_MAX, '\n');
+                getline(cin, name);
+                for (int i : FindPipebyFilter(groupOfPipe, checkByName, name))
+                    cout << groupOfPipe[i];
+            }
+            else
+            {
+                bool status;
+                cout << "Type the statys of pipe(Yes-1,No-0):" << endl;
+                status = getCorrectNumber(0, 1);
+                for (int i : FindPipebyFilter(groupOfPipe, checkByRepair, status))
+                    cout << groupOfPipe[i];
+            }
+            break;
+        }
+        case 9:
+        {
+            int choose;
+            cout << "Search KS by name(1) by number of unused workshops(2): ";
+            choose = getCorrectNumber(1, 2);
+            if (choose == 1)
+            {
+                string name;
+                cout << "Type the name of ks:" << endl;
+                cin.clear();
+                cin.ignore(INT_MAX, '\n');
+                getline(cin, name);
+                for (int i : FindKSbyFilter(groupOfKs, checkByName, name))
+                    cout << groupOfKs[i];
+            }
+            else
+            {
+                double percent;
+                cout << "Enter the percent of unused workshops";
+                percent = getCorrectNumber(0., 100.);
+                for (int i : FindKSbyFilter(groupOfKs, checkByUnusedWorkshops, percent))
+                    cout << groupOfKs[i] << (double(groupOfKs[i].amoutOfShop - groupOfKs[i].amountWorkingShop) * 100) / groupOfKs[i].amoutOfShop;
+            
             }
             break;
         }

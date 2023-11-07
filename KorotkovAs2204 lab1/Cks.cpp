@@ -1,7 +1,12 @@
 #include "Cks.h"
 #include "utils.h"
+#include "CPipe.h"
 using namespace std;
-
+int KS::MaxId=0;
+KS::KS()
+{
+    id = MaxId++;
+}
 istream& operator >> (istream& in, KS& ks)
 {
     cout << "Type name:";
@@ -18,7 +23,8 @@ istream& operator >> (istream& in, KS& ks)
 
 ostream& operator << (ostream& out, const KS& ks)
 {
-    out << "Name:" << ks.name
+    out << "ID:" << ks.id
+        << "\tName:" << ks.name
         << "\tAmount of shop:" << ks.amoutOfShop
         << "\tAmount of working shop:" << ks.amountWorkingShop
         << "\tEffectiveness:" << ks.effectiveness << endl;

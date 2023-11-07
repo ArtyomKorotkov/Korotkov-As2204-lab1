@@ -4,7 +4,8 @@ using namespace std;
 template <typename t>
  t getCorrectNumber(t min, t max)
 {
-    int x;
+     t x;
+
     while ((cin >> x).fail() || x < min || x>max)
     {
         cin.clear();
