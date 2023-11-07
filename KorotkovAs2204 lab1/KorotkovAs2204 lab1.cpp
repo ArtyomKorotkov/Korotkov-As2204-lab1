@@ -1,84 +1,16 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include "utils.h"
+#include "CPipe.h"
+#include "Cks.h"
+
+
 
 using namespace std;
-int getCorrectNumber(int min, int max)
-{
-    int x;
-    while ((cin >> x).fail() || x < min || x>max)
-    {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Type number between " << min << " and " << max << endl;
-    }
-    return x;
-}
-struct Pipe{
-    string name;
-    double length;
-    double diameter;
-    bool repair;
-};
 
-struct KS {
-    string name;
-    int amoutOfShop;
-    int amountWorkingShop;
-    string effectiveness;
-};
-istream& operator >> (istream& in, Pipe& pipe)
-{
-    cout << "Type name:";
-    in.ignore();
-    getline(in,pipe.name);
-    cout << "Type lenght:";
-    pipe.length = getCorrectNumber(50, 200);
-    cout << "Type diameter:";
-    pipe.diameter = getCorrectNumber(8, 35);
-    cout << "Is this pipe in repair?(Yes-1,No-0)";
-    pipe.repair = getCorrectNumber(0, 1);
-    return in;
-}
-string getTypeOfEffectiveness(int Number)
-{
-    if (Number == 1)
-        return "Low";
-    else if (Number == 2)
-        return "Midle";
-    else
-        return "Hight";
-}
-istream& operator >> (istream& in, KS& ks)
-{
-    cout << "Type name:";
-    in.ignore();
-    getline(in, ks.name);
-    cout << "Type how much shop you have:";
-    ks.amoutOfShop = getCorrectNumber(1, 10000) ;
-    cout << "Type how much working shop you have:";
-    ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
-    cout << "Type what is effectiveness you have\n 1-Low \n 2-Midle \n 3-Hight" << endl;
-    ks.effectiveness = getTypeOfEffectiveness(getCorrectNumber(1,3));
-    return in;
-}
-ostream& operator << (ostream& out, const Pipe& pip)
-{
-    out << "Name:" << pip.name
-        << "\tLength:" << pip.length
-        << "\tDiameter:" << pip.diameter
-        << "\tRepair:" << pip.repair << endl;
-    return out;
-}
-ostream& operator << (ostream& out, const KS& ks)
-{
-    out << "Name:" << ks.name
-        << "\tAmount of shop:" << ks.amoutOfShop
-        << "\tAmount of working shop:" << ks.amountWorkingShop
-        << "\tEffectiveness:" << ks.effectiveness << endl;
-    return out;
-}
+
 void SavePipes(ofstream& fout, const Pipe& pipe)
 {
     fout << pipe.name << endl
@@ -116,7 +48,7 @@ KS LoadKS(ifstream& fin)
 void EditPipe(Pipe& pipe)
 {
     if (!pipe.name.empty())
-        pipe.repair = !pipe.repair;// == "Yes") ? "No" : "Yes
+        pipe.repair = !pipe.repair;
     else
         cout << "Please load or input pipe" << endl;
 }
@@ -125,7 +57,7 @@ void EditKS(KS& ks)
     if (!ks.name.empty())
     {
         cout << "Type how much working shop you have:";
-        ks.amountWorkingShop = getCorrectNumber(0, ks.amoutOfShop);
+        ks.amountWorkingShop =  getCorrectNumber(0, ks.amoutOfShop);
     }
     else
         cout << "Please load or input ks" << endl;
@@ -141,10 +73,22 @@ void PrintMenu()
         << "7. Load" << endl
         << "0. Exit" << endl;
 }
+template <typename t>
+t& Select(vector<t>& group)
+{
+    if (!group.empty())
+    {
+        cout << "Type index: ";
+        int sizeOfgroup = group.size();
+        int index = getCorrectNumber(1, sizeOfgroup);
+        return group[index - 1];
+    }
+    
+}
 int main()
 {
-    Pipe pipe;
-    KS ks;
+    vector <Pipe> groupOfPipe;
+    vector <KS> groupOfKs;
     while (1) 
     {
         PrintMenu();
@@ -152,36 +96,43 @@ int main()
         {
         case 1:
         {
+            Pipe pipe;
             cin >> pipe;
+            groupOfPipe.push_back(pipe);
             break;
         }
         case 2:
         {
+            KS ks;
             cin >> ks;
+            groupOfKs.push_back(ks);
             break;
         }
         case 3:
         {
             cout << "Pipes:" << endl;
-            if (!pipe.name.empty())
-                cout << pipe << endl;
+            if (!groupOfPipe.empty())
+                for (Pipe& pipe:groupOfPipe)
+                    cout << pipe << endl;
             else
                 cout << "Not found" << endl;
             cout << "KS:" << endl;
-            if (!ks.name.empty())
-                cout << ks << endl;
+            if (!groupOfKs.empty())
+                for (KS& ks:groupOfKs)
+                    cout << ks << endl;
             else
                 cout << "Not found" << endl;
             break;
         }
         case 4:
         {
-            EditPipe(pipe);
+
+            EditPipe(Select(groupOfPipe));
             break;
         }
         case 5:
         {
-            EditKS(ks);
+            EditKS(Select(groupOfKs));
             break;
         }
         case 6:
@@ -190,23 +141,14 @@ int main()
             fout.open("data.txt", ios::out);
             if (fout.is_open())
             {
-                if (!pipe.name.empty()) 
-                {
-                    fout << 1<<endl;
+                fout << groupOfPipe.size()<<endl;
+                for (Pipe pipe: groupOfPipe)
                     SavePipes(fout, pipe);
-                }
-                else
-                    fout << 0<<endl;
-                if (!ks.name.empty()) 
-                {
-                    fout <<1<<endl;
+                fout << groupOfKs.size() << endl;
+                for (KS ks:groupOfKs)
                     SaveKS(fout, ks);
-                }
-                else
-                    fout << 0<<endl;
-
+                fout.close();
             }
-            fout.close();
             break;
         }
         case 7:
@@ -215,16 +157,16 @@ int main()
             fin.open("data.txt", ios::in);
             if (fin.is_open())
             {
-                string existPipe;
-                string existKS;
-                fin >> existPipe;
-                if (existPipe == "1")
-                    pipe = LoadPipes(fin);
-                fin >> existKS;
-                if (existKS=="1")
-                    ks = LoadKS(fin);
+                int countOfPipe;
+                int countOfKS;
+                fin >> countOfPipe;
+                while(countOfPipe--)
+                    groupOfPipe.push_back(LoadPipes(fin));
+                fin >> countOfKS;
+                while (countOfKS--)
+                    groupOfKs.push_back(LoadKS(fin));
+                fin.close();
             }
-            fin.close();
             break;
         }
         case 0:
