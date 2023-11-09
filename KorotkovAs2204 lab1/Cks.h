@@ -5,15 +5,22 @@
 using namespace std;
 class KS
 {
-    int id;
 public:
-    static int MaxId;
-    string name;
-    int amoutOfShop;
     int amountWorkingShop;
+
+    string name;
+    static int MaxId;
+    int amoutOfShop;
     string effectiveness;
     KS();
     friend istream& operator >> (istream& in,  KS& ks);
     friend ostream& operator << (ostream& out, const KS& ks);
+    int getId() { return id; };
+    void editKS();
+    void SaveKS(ofstream& fout);
+    void LoadKS(ifstream& fin);
+    void updateID();
+private:
+    int id;
 };
 

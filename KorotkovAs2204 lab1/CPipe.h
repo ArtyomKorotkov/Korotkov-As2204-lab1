@@ -17,5 +17,9 @@ public:
     Pipe();
     friend ostream& operator << (ostream& out, const Pipe& pip);
     friend istream& operator >> (istream& in, Pipe& pipe);
+    void editPipe();
+    void updateID();
+    void SavePipes(ofstream& fout);
+    void LoadPipes(ifstream& fin);
 };
 

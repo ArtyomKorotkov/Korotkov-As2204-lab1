@@ -1,12 +1,17 @@
 #include "Cks.h"
 #include "utils.h"
 #include "CPipe.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+
 using namespace std;
 int KS::MaxId=0;
 KS::KS()
 {
     id = MaxId++;
 }
+
 istream& operator >> (istream& in, KS& ks)
 {
     cout << "Type name:";
@@ -29,4 +34,28 @@ ostream& operator << (ostream& out, const KS& ks)
         << "\tAmount of working shop:" << ks.amountWorkingShop
         << "\tEffectiveness:" << ks.effectiveness << endl;
     return out;
+}
+void KS::editKS()
+{
+    cout << "Enter new number of working workshops:";
+    amountWorkingShop = getCorrectNumber(0, amoutOfShop);
+}
+void KS::SaveKS(ofstream& fout)
+{
+    fout << name << endl
+        << amoutOfShop << endl
+        << amountWorkingShop << endl
+        << effectiveness << endl;
+}
+void KS::LoadKS(ifstream& fin)
+{
+    fin.ignore();
+    getline(fin, name);
+    fin >> amoutOfShop;
+    fin >> amountWorkingShop;
+    fin >> effectiveness;
+}
+void KS::updateID()
+{
+    id = MaxId++;
 }

@@ -1,6 +1,8 @@
 #include "CPipe.h"
 #include "utils.h"
-#include "Cks.h"
+#include <fstream>
+
+#include <iostream>
 using namespace std;
 
 int Pipe::MaxId = 0;
@@ -30,4 +32,27 @@ istream& operator >> (istream& in, Pipe& pipe)
     cout << "Is this pipe in repair?(Yes-1,No-0)";
     pipe.repair = getCorrectNumber(0, 1);
     return in;
+}
+void Pipe::editPipe()
+{
+    repair = !repair;
+}
+void Pipe::updateID()
+{
+    id = MaxId++;
+}
+void Pipe::SavePipes(ofstream& fout)
+{
+    fout << name << endl
+        << length << endl
+        << diameter << endl
+        << repair << endl;
+}
+void Pipe::LoadPipes(ifstream& fin)
+{
+    fin.ignore();
+    getline(fin, name);
+    fin >> length;
+    fin >> diameter;
+    fin >> repair;
 }
