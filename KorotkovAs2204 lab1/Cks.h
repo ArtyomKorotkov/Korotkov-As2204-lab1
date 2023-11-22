@@ -19,8 +19,8 @@ public:
     void editKS();
     void SaveKS(ofstream& fout);
     void LoadKS(ifstream& fin);
-    void updateID();
-private:
+    string getTypeOfEffectiveness(int Number);
+private: 
     int id;
 };
 

@@ -5,7 +5,7 @@
 #include <iostream>
 using namespace std;
 
-int Pipe::MaxId = 0;
+int Pipe::MaxId = 1;
 
 Pipe::Pipe()
 {
@@ -37,19 +37,18 @@ void Pipe::editPipe()
 {
     repair = !repair;
 }
-void Pipe::updateID()
-{
-    id = MaxId++;
-}
+
 void Pipe::SavePipes(ofstream& fout)
 {
-    fout << name << endl
+    fout << id << endl
+        << name << endl
         << length << endl
         << diameter << endl
         << repair << endl;
 }
 void Pipe::LoadPipes(ifstream& fin)
 {
+    fin >> id;
     fin.ignore();
     getline(fin, name);
     fin >> length;

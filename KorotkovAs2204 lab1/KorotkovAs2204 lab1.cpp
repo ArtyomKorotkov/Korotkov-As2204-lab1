@@ -6,25 +6,24 @@
 #include "CPipe.h"
 #include "Cks.h"
 #include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
 
 
 using namespace std;
-double percentOfUnusedWorkshops(const KS &ks)
-{
-    return (double(ks.amoutOfShop - ks.amountWorkingShop) * 100) / ks.amoutOfShop;
-}
+unordered_map<int, Pipe> groupOfPipe;
+unordered_map<int, KS> groupOfKs;
+
 
 void PrintMenu()
 {
     cout << "1. Add pipe" << endl
         << "2. Add KS" << endl
         << "3. Show all objects" << endl
-        << "4. Edit pipe" << endl
-        << "5. Edit KS" << endl
+        << "4. Search Pipe" << endl
+        << "5. Search KS" << endl
         << "6. Save" << endl
         << "7. Load" << endl
-        << "8. Search Pipe" << endl
-        << "9. Search KS" << endl
         << "0. Exit" << endl;
 }
 
@@ -39,50 +38,46 @@ using FilterKS = bool(*)(const KS& ks, T param);
 template <typename T>
 bool checkByName(const T& object, string param)
 {
-    return object.name == param;
+    return object.name.find(param)!=string::npos;
 }
 bool checkByRepair(const Pipe& pipe, bool param)
 {
     return pipe.repair == param;
 }
-bool checkByUnusedWorkshops(const KS& ks, double param)
+bool checkByUnusedWorkshops( const KS& ks, double param)
 {
-    return percentOfUnusedWorkshops(ks) >= param;
+    return (double(ks.amoutOfShop - ks.amountWorkingShop) * 100) / ks.amoutOfShop>= param;
 }
 template <typename T>
 
-vector <int> FindPipebyFilter(const vector<Pipe>& groupOfPipe,FilterPipe<T> f, T param)
+unordered_set<int> FindPipebyFilter(const unordered_map<int, Pipe>& groupOfPipe,FilterPipe<T> f, T param)
 {
-    vector <int> res;
-    int i = 0;
+    unordered_set<int> res;
     for (auto& pipe : groupOfPipe)
     {
-        if (f(pipe,param))
-            res.push_back(i);
-        i++;
+        if (f(pipe.second,param))
+            res.insert(pipe.first);
     }
     return res;
 }
 
 template <typename T>
-vector <int> FindKSbyFilter(const vector<KS>& groupOfKs, FilterKS<T> f, T param)
+unordered_set<int> FindKSbyFilter( unordered_map<int, KS>& groupOfKs, FilterKS<T> f, T param)
 {
-    vector <int> res;
-    int i = 0;
+    unordered_set<int> res;
     for (auto& KS : groupOfKs)
     {
-        if (f(KS, param))
-            res.push_back(i);
-        i++;
+        if (f(KS.second, param))
+            res.insert(KS.first);
     }
     return res;
 }
-vector<int> FindKSsID(vector<KS>& groupOfKs)
+unordered_set<int> FindKSsID(unordered_map<int,KS>& groupOfKs)
     {
-        vector<int> ID;
+        unordered_set<int> ID;
         int choose;
-        cout << "Search KS by name(1) by number of unused workshops(2): ";
-        choose = getCorrectNumber(1, 2);
+        cout << "Search KS by name(1) by number of unused workshops(2) by id(3): ";
+        choose = getCorrectNumber(1, 3);
         if (choose == 1)
         {
             string name;
@@ -92,22 +87,42 @@ vector<int> FindKSsID(vector<KS>& groupOfKs)
             getline(cin, name);
             ID=FindKSbyFilter(groupOfKs, checkByName, name);
         }
-        else
+        else if(choose==2)
         {
             double percent;
             cout << "Enter the percent of unused workshops";
             percent = getCorrectNumber(0., 100.);
             ID = FindKSbyFilter(groupOfKs, checkByUnusedWorkshops, percent);
         }
+        else if(choose==3)
+        {
+            unordered_set<int> allId;
+            cout << "All id you can input"<<endl;
+            for (auto x : groupOfKs)
+            {
+                cout << x.first << endl;
+                allId.insert(x.first);
+            }
+            while (1)
+            {
+                ID.insert(getCorrectID(allId));
+                if (allId.size() == 0)
+                    break;
+                cout << "you want to stop? (1 yes) (2 No)" << endl;
+                int choose = getCorrectNumber(1, 2);
+                if (choose == 1)
+                    break;
+            }
+        }
         return ID;
 }
-vector<int> FindPipesID(vector<Pipe>& groupOfPipe)
+unordered_set<int> FindPipesID(unordered_map<int, Pipe>& groupOfPipe)
 {
 
-    vector<int> ID;
+    unordered_set<int> ID;
     int choose;
-    cout << "Search Pipe by name(1) by number status of repairing(2): ";
-    choose = getCorrectNumber(1, 2);
+    cout << "Search Pipe by name(1) by number status of repairing(2) by ids(3): ";
+    choose = getCorrectNumber(1, 3);
     if (choose == 1)
     {
         string name;
@@ -117,508 +132,269 @@ vector<int> FindPipesID(vector<Pipe>& groupOfPipe)
         getline(cin, name);
         ID = FindPipebyFilter(groupOfPipe, checkByName, name);
     }
-    else
+    else if(choose==2)
     {
         bool status;
         cout << "Type the status of pipe(Yes-1,No-0):" << endl;
         status = getCorrectNumber(0, 1);
         ID = FindPipebyFilter(groupOfPipe, checkByRepair, status);
     }
+    else if (choose == 3)
+    {
+        unordered_set<int> allId;
+        cout << "All id you can input" << endl;
+        for (auto x : groupOfPipe)
+        {
+            cout << x.first << endl;
+            allId.insert(x.first);
+        }
+        while (1)
+        {
+            ID.insert(getCorrectID(allId));
+            if (allId.size() == 0)
+                break;
+            cout << "you want to stop? (1 yes) (2 No)" << endl;
+            int choose = getCorrectNumber(1, 2);
+            if (choose == 1)
+                break;
+        }
+    }
     return ID;
 }
-int getCorrectID(vector <int>& Ids)
+
+template <typename T>
+void ShowSearchObject(T& groupOfObject,unordered_set<int>& id)
 {
-    int x;
-    while ((cin >> x).fail() || find(Ids.begin(), Ids.end(),x)==Ids.end())
+    for (auto& i : id)
+        cout << groupOfObject[i] << endl;
+}
+void editKs(unordered_map<int, KS>& groupOfKs, unordered_set<int>& id)
+{
+    if (id.size() > 1)
     {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "input some of this ids" << endl;
-        for (int id : Ids)
-            cout << id<<endl;
+        int choose;
+        cout << "Edit All(1), edit some ks(2)";
+        choose = getCorrectNumber(1, 2);
+        if (choose == 1)
+        {
+            int minAmountOfWorkingShops = INT_MAX;
+            for (int i : id)
+                minAmountOfWorkingShops = min(minAmountOfWorkingShops, groupOfKs[i].amoutOfShop);
+            cout << "Enter chenged amount of working shops: ";
+            int changedAmountOfWS = getCorrectNumber(0, minAmountOfWorkingShops);
+            for (int i : id)
+                groupOfKs[i].amountWorkingShop = changedAmountOfWS;
+        }
+        else
+        {
+            unordered_set<int>::iterator itr;
+            while (1)
+            {
+                groupOfKs[getCorrectID(id)].editKS();
+                if (id.size() == 0)
+                    break;
+                cout << "you want to stop? (1 yes) (2 No)" << endl;
+                int choose = getCorrectNumber(1, 2);
+                if (choose == 1)
+                    break;
+            }
+        }
     }
-    auto iter = find(Ids.begin(), Ids.end(), x);
-    Ids.erase(iter);
-    return x;
+    else 
+    {
+        for (int i : id)
+            groupOfKs[i].editKS();
+    }
 }
 
-void EditKS(vector<KS>& groupOfKs)
+void deleteKS(unordered_map<int, KS>& groupOfKs, unordered_set<int>& id)
 {
-
+    if (id.size() > 1)
+    {
+        int choose;
+        cout << "delete All(1), delete some ks(2)";
+        choose = getCorrectNumber(1, 2);
+        if (choose == 1)
+        {
+            for (int i : id)
+                groupOfKs.erase(i);
+        }
+        else
+        {
+            unordered_set<int>::iterator itr;
+            while (1)
+            {
+                groupOfKs.erase(getCorrectID(id));
+                cout << "you want to stop? (1 yes) (2 No)" << endl;
+                if (id.size() == 0)
+                    break;
+                int choose = getCorrectNumber(1, 2);
+                if (choose == 1)
+                    break;
+            }
+        }
+    }
+    else
+    {
+        for (int i : id)
+            groupOfKs.erase(i);
+    }
+}
+void ShowEditKs(unordered_map<int, KS>& groupOfKs)
+{
     if (groupOfKs.size() != 0)
     {
-        cout << "1.Edit KS 2. Delete KS :";
-        int choose;
-        choose = getCorrectNumber(1, 2);
-        if (choose == 1)
+        auto id = FindKSsID(groupOfKs);
+        if (id.size() != 0)
         {
-            cout << "1.Edit by filter 2.Edit by ids:";
-            int choose2;
-            choose2 = getCorrectNumber(1, 2);
-            if (choose2 == 1)
+            ShowSearchObject(groupOfKs, id);
+            int choose;
+            cout << "Edit(1), Delete(2), Exit(0)";
+            choose = getCorrectNumber(0, 2);
+            if (choose == 1)
             {
-                vector <int> ids;
-                ids = FindKSsID(groupOfKs);
-                cout << "1.Edit all kss 2.Edit some kss:";
-                int choose3;
-                choose3 = getCorrectNumber(1, 2);
-                if (choose3 == 1)
-                {
-                    if (ids.size() != 0)
-                    {
-                        int minAmountOfWorkingShops = INT_MAX;
-                        for (int id : ids)
-                            minAmountOfWorkingShops = min(minAmountOfWorkingShops, groupOfKs[id].amoutOfShop);
-                        cout << "Enter chenged amount of working shops: ";
-                        int changedAmountOfWS = getCorrectNumber(0, minAmountOfWorkingShops);
-                        for (int id : ids)
-                            groupOfKs[id].amountWorkingShop = changedAmountOfWS;
-                    }
-                    else
-                        cout << "You cant change anything"<<endl;
-                }
-                else
-                {
-                    if (ids.size() > 0)
-                    {
-                        int countOfKS;
-                        cout << "How much KSs you want to change" << endl;
-                        cout << "You can change " << ids.size() << " KSs" << endl;
-                        int countOfIds = ids.size();
-                        countOfKS = getCorrectNumber(0, countOfIds);
-                        while (countOfKS != 0)
-                        {
-                            groupOfKs[getCorrectID(ids)].editKS();
-                            countOfKS--;
-                        }
-                    }
-                    else
-                        cout << "You cant change anything"<<endl;
-
-                }
+                editKs(groupOfKs, id);
             }
-            else
+            else if (choose == 2)
             {
-                if (KS::MaxId > 0)
-                {
-                    cout << "How much KSs you want to change" << endl;
-                    int countOfKS;
-                    countOfKS = getCorrectNumber(1, KS::MaxId);
-                    vector <int> id;
-                    for (int i = 0; i < KS::MaxId; i++)
-                        id.push_back(i);
-                    vector<int> ids;
-                    while (countOfKS != 0)
-                    {
-                        cout << "Choose id ks to edit:";
-                        int x = getCorrectID(id);
-                        ids.push_back(x);
-                        countOfKS--;
-                    }
-                    cout << "1.Edit all kss 2.Edit some kss:";
-                    int choose3;
-                    choose3 = getCorrectNumber(1, 2);
-                    if (choose3 == 2)
-                    {
-                        for (int& i : ids)
-                        {
-                            cout << "Now you change KS with id: " << i << endl;
-                            groupOfKs[i].editKS();
-                        }
-                    }
-                    else
-                    {
-                        if (ids.size() != 0)
-                        {
-                            int minAmountOfWorkingShops = INT_MAX;
-                            for (int id : ids)
-                                minAmountOfWorkingShops = min(minAmountOfWorkingShops, groupOfKs[id].amoutOfShop);
-                            cout << "Enter chenged amount of working shops: ";
-                            int changedAmountOfWS = getCorrectNumber(0, minAmountOfWorkingShops);
-                            for (int id : ids)
-                                groupOfKs[id].amountWorkingShop = changedAmountOfWS;
-                        }
-                        else
-                            cout << "You cant change anything" << endl;
-                    }
-                }
-               
+                deleteKS(groupOfKs, id);
             }
         }
         else
+            cout << "No such kss" << endl;;
+    }
+    else
+        cout << "You have zero ks" << endl;
+}
+void editPipe(unordered_map<int, Pipe>& groupOfPipe, unordered_set<int>& id)
+{
+    if (id.size() > 1)
+    {
+        int choose;
+        cout << "Edit All(1), edit some Pipe(2)";
+        choose = getCorrectNumber(1, 2);
+        if (choose == 1)
         {
-            cout << "1.Delete by filter 2.Delete by ids:";
-            int choose2;
-            choose2 = getCorrectNumber(1, 2);
-            if (choose2 == 1)
+            cout << "New status (1:yes 0:no)";
+            bool changedStatus = getCorrectNumber(0, 1);
+            for (int i : id)
+                groupOfPipe[i].repair = changedStatus;
+        }
+        else
+        {
+            unordered_set<int>::iterator itr;
+            while (1)
             {
-                vector <int> ids;
-                ids = FindKSsID(groupOfKs);
-                if (ids.size() != 0)
-                {
-                    cout << "1 delete all ks 2 delete some ks";
-                    int choose4;
-                    choose4 = getCorrectNumber(1, 2);
-                    if (choose4 == 1)
-                    {
-                        vector <int>necessaryID;
-                        int i = 0;
-                        while (necessaryID.size() != KS::MaxId - ids.size())
-                        {
-                            if (find(ids.begin(), ids.end(), i) == ids.end())
-                                necessaryID.push_back(i);
-                            i++;
-                        }
-                        vector <KS>copygroupOfKs = groupOfKs;
-                        groupOfKs.clear();
-                        for (int x : necessaryID)
-                        {
-                            groupOfKs.push_back(copygroupOfKs[x]);
-                        }
-                        KS::MaxId = 0;
-                        for (auto& i : groupOfKs)
-                            i.updateID();
-                    }
-                    else
-                    {
-                        int countOfKS;
-                        cout << "How much KS you want to delete" << endl;
-                        if (ids.size() > 0)
-                        {
-                            cout << "You can change" << ids.size() << "KSs" << endl;
-                            int countOfIds = ids.size();
-                            countOfKS = getCorrectNumber(0, countOfIds);
-                            vector<int> idForDeleted;
-                            while (countOfKS != 0)
-                            {
-                                idForDeleted.push_back(getCorrectID(ids));
-                                countOfKS--;
-                            }
-                            vector <int>necessaryID;
-                            int i = 0;
-                            while (necessaryID.size() != KS::MaxId - idForDeleted.size())
-                            {
-                                if (find(idForDeleted.begin(), idForDeleted.end(), i) == idForDeleted.end())
-                                    necessaryID.push_back(i);
-                                i++;
-                            }
-                            vector <KS>copygroupOfKS = groupOfKs;
-                            groupOfKs.clear();
-                            for (int x : necessaryID)
-                            {
-                                groupOfKs.push_back(copygroupOfKS[x]);
-                            }
-                            KS::MaxId = 0;
-                            for (auto& i : groupOfKs)
-                                i.updateID();
-                        }
-                        else
-                            cout << "You cant change anything" << endl;
-                    }
-                }
-                else
-                    cout << "You cant change anything"<<endl;
-
-            }
-            else 
-            {
-                cout << "How much KSs you want to delete" << endl;
-                int countOfKS;
-                countOfKS = getCorrectNumber(1, KS::MaxId);
-                vector <int> id;
-                for (int i = 0; i < KS::MaxId; i++)
-                    id.push_back(i);
-                vector<int> ids;
-                while (countOfKS != 0)
-                {
-                    cout << "Choose id ks to edit:";
-                    int x = getCorrectID(id);
-                    ids.push_back(x);
-                    countOfKS--;
-                }
-                if (ids.size() != 0)
-                {
-                    vector <int>necessaryID;
-                    int i = 0;
-                    while (necessaryID.size() != KS::MaxId - ids.size())
-                    {
-                        if (find(ids.begin(), ids.end(), i) == ids.end())
-                            necessaryID.push_back(i);
-                        i++;
-                    }
-                    vector <KS>copygroupOfKs = groupOfKs;
-                    groupOfKs.clear();
-                    for (int x : necessaryID)
-                    {
-                        groupOfKs.push_back(copygroupOfKs[x]);
-                    }
-                    KS::MaxId = 0;
-                    for (auto& i : groupOfKs)
-                        i.updateID();
-                }
-                else
-                    cout << "You cant change anything";
+                groupOfPipe[getCorrectID(id)].editPipe();
+                cout << "you want to stop? (1 yes) (2 No)" << endl;
+                if (id.size() == 0)
+                    break;
+                int choose = getCorrectNumber(1, 2);
+                if (choose == 1)
+                    break;
             }
         }
     }
     else
     {
-        cout << "Please load or input ks" << endl;
+        for (int i : id)
+            groupOfPipe[i].editPipe();
     }
 }
-void EditPipe(vector<Pipe>& groupOfPipe)
-{
 
+void deletePipe(unordered_map<int, Pipe>& groupOfPipe, unordered_set<int>& id)
+{
+    if (id.size() > 1)
+    {
+        int choose;
+        cout << "delete All(1), delete some pipe(2)";
+        choose = getCorrectNumber(1, 2);
+        if (choose == 1)
+        {
+            for (int i : id)
+                groupOfPipe.erase(i);
+        }
+        else
+        {
+            unordered_set<int>::iterator itr;
+            while (1)
+            {
+                groupOfPipe.erase(getCorrectID(id));
+                cout << "you want to stop? (1 yes) (2 No)" << endl;
+                if (id.size() == 0)
+                    break;
+                int choose = getCorrectNumber(1, 2);
+                if (choose == 1)
+                    break;
+             }
+        }
+    }
+    else
+    {
+        for (int i : id)
+            groupOfPipe.erase(i);
+    }
+}
+void ShowEditPipe(unordered_map<int, Pipe>& groupOfPipe)
+{
     if (groupOfPipe.size() != 0)
     {
-        cout << "1.Edit pipe 2. Delete pipe :";
-        int choose;
-        choose = getCorrectNumber(1, 2);
-        if (choose == 1)
+        auto id = FindPipesID(groupOfPipe);
+        if (id.size() != 0)
         {
-            cout << "1.Edit by filter 2.Edit by ids:";
-            int choose2;
-            choose2 = getCorrectNumber(1, 2);
-            if (choose2 == 1)
+            ShowSearchObject(groupOfPipe, id);
+            int choose;
+            cout << "Edit(1), Delete(2), Exit(0)";
+            choose = getCorrectNumber(0, 2);
+            if (choose == 1)
             {
-                vector <int> ids;
-                ids = FindPipesID(groupOfPipe);
-                cout << "1.Edit all pipes 2.Edit some pipes:";
-                int choose3;
-                choose3 = getCorrectNumber(1, 2);
-                if (choose3 == 1)
-                {
-                    if (ids.size() != 0)
-                    {
-                        cout << "New status (1:yes 0:no)";
-                        bool changedStatus = getCorrectNumber(0, 1);
-                        for (int id : ids)
-                            groupOfPipe[id].repair = changedStatus;
-                    }
-                    else
-                        cout << "You cant change anyting"<<endl;
-                }
-                else
-                {
-                    int countOfPipe;
-                    cout << "How much Pipes you want to change" << endl;
-                    if (ids.size() > 0)
-                    {
-                        cout << "You can change " << ids.size() << " Pipes" << endl;
-                        int countOfIds = ids.size();
-                        countOfPipe = getCorrectNumber(0, countOfIds);
-                        while (countOfPipe != 0)
-                        {
-                            groupOfPipe[getCorrectID(ids)].editPipe();
-                            countOfPipe--;
-                        }
-                    }
-                    else
-                        cout << "you cant change anything" << endl;
-                }
+                editPipe(groupOfPipe, id);
             }
-            else
+            else if (choose == 2)
             {
-                cout << "How much Pipes you want to change" << endl;
-                int countOfPipe;
-                countOfPipe = getCorrectNumber(1, Pipe::MaxId);
-                vector <int> id;
-                for (int i = 0; i < Pipe::MaxId; i++)
-                    id.push_back(i);
-                vector<int> ids;
-                while (countOfPipe != 0)
-                {
-                    cout << "Choose id pipe to edit:";
-                    int x = getCorrectID(id);
-                    ids.push_back(x);
-                    countOfPipe--;
-                }
-                cout << "1.Edit all pipes 2.Edit some pipes:";
-                int choose3;
-                choose3 = getCorrectNumber(1, 2);
-                if (choose3 == 2)
-                {
-                    for (int& i : ids)
-                    {
-                        cout << "Now you change pipe with id: " << i << endl;
-                        groupOfPipe[i].editPipe();
-                    }
-                }
-                else
-                {
-                    if (ids.size() != 0)
-                    {
-                        cout << "Input new status";
-                        int changedStatus = getCorrectNumber(0, 1);
-                        for (int id : ids)
-                            groupOfPipe[id].repair = changedStatus;
-                    }
-                    else
-                        cout << "You cant change anything";
-                }
-
+                deletePipe(groupOfPipe, id);
             }
         }
         else
-        {
-            cout << "1.Delete by filter 2.Delete by ids:";
-            int choose2;
-            choose2 = getCorrectNumber(1, 2);
-            if (choose2 == 1)
-            {
-                vector <int> ids;
-                ids = FindPipesID(groupOfPipe);
-                if (ids.size() != 0)
-                {
-                    cout << "1 delete all found 2 choice deleted item";
-                    int choose4;
-                    choose4 = getCorrectNumber(1, 2);
-                    if (choose4 == 1) {
-                        vector <int>necessaryID;
-                        int i = 0;
-                        while (necessaryID.size() != Pipe::MaxId - ids.size())
-                        {
-                            if (find(ids.begin(), ids.end(), i) == ids.end())
-                                necessaryID.push_back(i);
-                            i++;
-                        }
-                        vector <Pipe>copygroupOfPipe = groupOfPipe;
-                        groupOfPipe.clear();
-                        for (int x : necessaryID)
-                        {
-                            groupOfPipe.push_back(copygroupOfPipe[x]);
-                        }
-                        Pipe::MaxId = 0;
-                        for (auto& i : groupOfPipe)
-                            i.updateID();
-                    }
-                    else
-                    {
-                        int countOfPipe;
-                        cout << "How much Pipes you want to delete" << endl;
-                        if (ids.size() > 0)
-                        {
-                            cout << "You can change" << ids.size() << "Pipes" << endl;
-                            int countOfIds = ids.size();
-                            countOfPipe = getCorrectNumber(0, countOfIds);
-                            vector<int> idForDeleted;
-                            while (countOfPipe != 0)
-                            {
-                                for (int id : ids)
-                                    cout << id << endl;
-
-                                idForDeleted.push_back( getCorrectID(ids));
-                                countOfPipe--;
-                            }
-                            vector <int>necessaryID;
-                            int i = 0;
-                            while (necessaryID.size() != Pipe::MaxId - idForDeleted.size())
-                            {
-                                if (find(idForDeleted.begin(), idForDeleted.end(), i) == idForDeleted.end())
-                                    necessaryID.push_back(i);
-                                i++;
-                            }
-                            vector <Pipe>copygroupOfPipe = groupOfPipe;
-                            groupOfPipe.clear();
-                            for (int x : necessaryID)
-                            {
-                                groupOfPipe.push_back(copygroupOfPipe[x]);
-                            }
-                            Pipe::MaxId = 0;
-                            for (auto& i : groupOfPipe)
-                                i.updateID();
-                        }
-                        else
-                            cout << "you cant change anything" << endl;
-                    }
-                }
-
-            }
-            else
-            {
-                cout << "Enter the number of Pipe which you want to delete";
-                int countOfPipe;
-                countOfPipe = getCorrectNumber(1, Pipe::MaxId);
-                vector<int> allId;
-                for (int i=0; i < Pipe::MaxId; i++)
-                    allId.push_back(i);
-                int idFordeleted;
-                vector<int> ids;
-                while (countOfPipe != 0)
-                {
-                    cout << "Choose id pipe to delete:";
-                    idFordeleted=(getCorrectID(allId));
-                    ids.push_back(idFordeleted);
-                    countOfPipe--;
-                }
-                if (ids.size() != 0)
-                {
-                    vector <int>necessaryID;
-                    int i = 0;
-                    while (necessaryID.size() != Pipe::MaxId - ids.size())
-                    {
-                        if (find(ids.begin(), ids.end(), i) == ids.end())
-                            necessaryID.push_back(i);
-                        i++;
-                    }
-                    vector <Pipe>copygroupOfPipe = groupOfPipe;
-                    groupOfPipe.clear();
-                    for (int x : necessaryID)
-                    {
-                        groupOfPipe.push_back(copygroupOfPipe[x]);
-                    }
-                    Pipe::MaxId = 0;
-                    for (auto& i : groupOfPipe)
-                        i.updateID();
-                }
-                else
-                    cout << "you cant change anything"<<endl;
-
-
-            }
-
-        }
+            cout << "No such pipe"<<endl;
     }
     else
-    {
-        cout << "Please load or input pipe" << endl;
-    }
+        cout << "You have zero pipes"<<endl;
 }
+
 int main()
 {
-    vector <Pipe> groupOfPipe;
-    vector <KS> groupOfKs;
     while (1) 
     {
         PrintMenu();
-        switch (getCorrectNumber(0,9))
+        switch (getCorrectNumber(0,7))
         {
         case 1:
         {
             Pipe pipe;
             cin >> pipe;
-            groupOfPipe.push_back(pipe);
+            groupOfPipe.insert({ pipe.getId(), pipe});
             break;
         }
         case 2:
         {
             KS ks;
             cin >> ks;
-            groupOfKs.push_back(ks);
+            groupOfKs.insert({ks.getId(),ks});
             break;
         }
         case 3:
         {
             cout << "Pipes:" << endl;
             if (!groupOfPipe.empty())
-                for (Pipe& pipe:groupOfPipe)
-                    cout << pipe << endl;
+                for (auto& pipe:groupOfPipe)
+                    cout << pipe.second << endl;
             else
                 cout << "Not found" << endl;
             cout << "KS:" << endl;
             if (!groupOfKs.empty())
-                for (KS& ks:groupOfKs)
-                    cout << ks << endl;
+                for (auto& ks:groupOfKs)
+                    cout << ks.second << "\t" << endl;
             else
                 cout << "Not found" << endl;
             break;
@@ -626,12 +402,12 @@ int main()
         case 4:
         {
 
-            EditPipe(groupOfPipe);
+            ShowEditPipe(groupOfPipe);
             break;
         }
         case 5:
         {
-            EditKS(groupOfKs);
+            ShowEditKs(groupOfKs);
             break;
         }
         case 6:
@@ -644,11 +420,13 @@ int main()
             if (fout.is_open())
             {
                 fout << groupOfPipe.size()<<endl;
-                for (Pipe pipe: groupOfPipe)
-                    pipe.SavePipes(fout);
+                fout << Pipe::MaxId<<endl;
+                for (auto &pipe: groupOfPipe)
+                    pipe.second.SavePipes(fout);
                 fout << groupOfKs.size() << endl;
-                for (KS ks:groupOfKs)
-                    ks.SaveKS(fout);
+                fout << KS::MaxId<<endl;
+                for (auto &ks:groupOfKs)
+                    ks.second.SaveKS(fout);
                 fout.close();
             }
             else
@@ -668,50 +446,31 @@ int main()
             {
                 int countOfPipe;
                 int countOfKS;
+                int ksMaxId;
+                int pipeMaxId;
+
                 fin >> countOfPipe;
+                fin >> ksMaxId;
                 while (countOfPipe--)
                 {
                     Pipe pipe;
                     pipe.LoadPipes(fin);
-                    groupOfPipe.push_back(pipe);
+                    groupOfPipe.insert({ pipe.getId(),pipe });
                 }
+                Pipe::MaxId = ksMaxId;
                 fin >> countOfKS;
+                fin >> pipeMaxId;
                 while (countOfKS--)
                 {
                     KS ks;
                     ks.LoadKS(fin);
-                    groupOfKs.push_back(ks);
+                    groupOfKs.insert({ks.getId(), ks});
                 }
+                KS::MaxId = pipeMaxId;
                 fin.close();
             }
             else
                 cout << "Reading error"<<endl;
-            break;
-        }
-        case 8:
-        {
-            if (groupOfPipe.size() != 0)
-            {
-                vector<int> ID;
-                ID = FindPipesID(groupOfPipe);
-                for (int i : ID)
-                    cout << groupOfPipe[i];
-            }
-            else
-                cout << "Group of pipe is empty"<<endl;
-            break;
-        }
-        case 9:
-        {
-            if (groupOfKs.size() != 0)
-            {
-                vector<int> ID;
-                ID = FindKSsID(groupOfKs);
-                for (int i : ID)
-                    cout << groupOfKs[i];
-            }
-            else
-                cout << "Group of ks is empty"<<endl;
             break;
         }
         case 0:
