@@ -27,6 +27,8 @@ void PrintMenu()
         << "6. Save" << endl
         << "7. Load" << endl
         << "8. Add connect" << endl
+        <<"9. Topological sort"<<endl
+        <<"10. View connections"<<endl
         << "0. Exit" << endl;
 }
 
@@ -371,7 +373,7 @@ int main()
     while (1) 
     {
         PrintMenu();
-        switch (getCorrectNumber(0,8))
+        switch (getCorrectNumber(0,9))
         {
         case 1:
         {
@@ -391,16 +393,23 @@ int main()
         {
             cout << "Pipes:" << endl;
             if (!groupOfPipe.empty())
-                for (auto& pipe:groupOfPipe)
+                for (auto& pipe : groupOfPipe)
                     cout << pipe.second << endl;
             else
                 cout << "Not found" << endl;
             cout << "KS:" << endl;
             if (!groupOfKs.empty())
-                for (auto& ks:groupOfKs)
+                for (auto& ks : groupOfKs)
                     cout << ks.second << "\t" << endl;
             else
                 cout << "Not found" << endl;
+            cout << "Connections" << endl;
+            if (connections.size() != 0)
+            {
+                connections.viewConnection();
+            }
+            else
+                cout << "Not found"<<endl;
             break;
         }
         case 4:
@@ -480,6 +489,10 @@ int main()
         case 8: 
         {
             connections.addConnect(groupOfPipe,groupOfKs);
+        }
+        case 9:
+        {
+            connections.topologicalSort();
         }
         case 0:
         {

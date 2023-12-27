@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <map>
+#include <set>
 #include <utility>
 
 using namespace std;
@@ -93,4 +94,63 @@ void Connection::addConnect(unordered_map<int, Pipe>& groupOfPipe,
 				break;
 		}
 	}
+}
+void Connection::topologicalSort()
+{
+	if (connections.size() != 0)
+	{
+		set<int> ids;
+		for (auto& i : connections)
+		{
+			ids.insert(i.first.second);
+			ids.insert(i.first.first);
+		}
+		map<int, int> incomingEdges;
+		for (auto i : ids)
+			incomingEdges[i] = 0;
+
+		map<int, vector<int> > graph;
+		for (auto& edges : connections)
+		{
+			graph[edges.first.first].push_back(edges.first.second);
+			incomingEdges[edges.first.second] += 1;
+		}
+		vector<int> cand;
+		for (const auto& [edge, numberOfEdges] : incomingEdges)
+		{
+			if (numberOfEdges == 0)
+				cand.push_back(edge);
+		}
+		vector<int> answer;
+		while (cand.size() != 0)
+		{
+			int CurentElement = cand[cand.size() - 1];
+			cand.pop_back();
+			for (auto edge : graph[CurentElement])
+			{
+				incomingEdges[edge] -= 1;
+				if (incomingEdges[edge] == 0)
+				{
+					cand.push_back(edge);
+				}
+			}
+			answer.push_back(CurentElement);
+		}
+		if (answer.size() == ids.size())
+		{
+			for (auto& i : answer)
+				cout << i << " ";
+			cout << endl;
+		}
+		else
+			cout << "Error" << endl;
+	}
+	else
+		cout << "You have zero connections" << endl;
+	
+}
+void Connection::viewConnection()
+{	
+	for (auto con : connections)
+		cout << "Begin of KS id: " << con.first.first << " End of KS id: " << con.first.second << " id of Pipe: " << con.second<<endl;
 }

@@ -16,5 +16,8 @@ private:
 public:
 	void addConnect(unordered_map<int, Pipe>& groupOfPipe,
 		unordered_map<int, KS>& groupOfKs);
+	void topologicalSort();
+	void viewConnection();
+	int size() { return connections.size(); };
 };
 
