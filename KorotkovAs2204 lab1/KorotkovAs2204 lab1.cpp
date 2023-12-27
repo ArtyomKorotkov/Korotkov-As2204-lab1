@@ -524,10 +524,13 @@ int main()
         {
             int start;
             int finish;
+            unordered_set<int> ids;
+            for (auto& ks : groupOfKs)
+                ids.insert(ks.first);
             cout << "Input start Vertex";
-            cin >> start;
+            start=getCorrectID(ids);
             cout << "Intput finish vertex";
-            cin >> finish;
+            finish=getCorrectID(ids);
             connections.shortestPath(start, finish, groupOfPipe);
             break;
         }

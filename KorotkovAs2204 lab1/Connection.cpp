@@ -42,8 +42,6 @@ void Connection::addConnect(unordered_map<int, Pipe>& groupOfPipe,
 				indexSecond = getCorrectID(avaibleIds);
 				if (indexFirst != indexSecond)
 					break;
-				else
-					cout << "type different ids"<<endl;
 			}
 			cout << "Choose pipe diameter:" << endl
 				<< "1. 500" << endl
