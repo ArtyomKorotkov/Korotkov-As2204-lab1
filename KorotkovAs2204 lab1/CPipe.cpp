@@ -27,12 +27,14 @@ istream& operator >> (istream& in, Pipe& pipe)
     getline(in, pipe.name);
     cout << "Type lenght:";
     pipe.length = getCorrectNumber(50., 200.);
-    cout << "Type diameter:";
-    pipe.diameter = getCorrectNumber(8., 35.);
+    cout << "Type diameter(1-500,2-700,3-1000,4-1700):";
+    int numOfDim = getCorrectNumber(1, 4);
+    pipe.diameter = (numOfDim == 1 ? 500 : numOfDim == 2 ? 700 : numOfDim == 3 ? 1000 : 1400);
     cout << "Is this pipe in repair?(Yes-1,No-0)";
     pipe.repair = getCorrectNumber(0, 1);
     return in;
 }
+
 void Pipe::editPipe()
 {
     repair = !repair;

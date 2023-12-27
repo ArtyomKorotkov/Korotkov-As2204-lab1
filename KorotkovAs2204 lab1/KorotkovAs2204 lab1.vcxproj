@@ -128,11 +128,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cks.cpp" />
+    <ClCompile Include="Connection.cpp" />
     <ClCompile Include="CPipe.cpp" />
     <ClCompile Include="KorotkovAs2204 lab1.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cks.h" />
+    <ClInclude Include="Connection.h" />
     <ClInclude Include="CPipe.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>

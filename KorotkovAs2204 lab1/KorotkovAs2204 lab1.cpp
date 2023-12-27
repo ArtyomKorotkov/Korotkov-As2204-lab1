@@ -5,15 +5,17 @@
 #include "utils.h"
 #include "CPipe.h"
 #include "Cks.h"
+#include "Connection.h"
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
+#include <map>
 
 
 using namespace std;
 unordered_map<int, Pipe> groupOfPipe;
 unordered_map<int, KS> groupOfKs;
-
+Connection connections;
 
 void PrintMenu()
 {
@@ -24,6 +26,7 @@ void PrintMenu()
         << "5. Search KS" << endl
         << "6. Save" << endl
         << "7. Load" << endl
+        << "8. Add connect" << endl
         << "0. Exit" << endl;
 }
 
@@ -44,6 +47,7 @@ bool checkByRepair(const Pipe& pipe, bool param)
 {
     return pipe.repair == param;
 }
+
 bool checkByUnusedWorkshops( const KS& ks, double param)
 {
     return (double(ks.amoutOfShop - ks.amountWorkingShop) * 100) / ks.amoutOfShop>= param;
@@ -367,7 +371,7 @@ int main()
     while (1) 
     {
         PrintMenu();
-        switch (getCorrectNumber(0,7))
+        switch (getCorrectNumber(0,8))
         {
         case 1:
         {
@@ -472,6 +476,10 @@ int main()
             else
                 cout << "Reading error"<<endl;
             break;
+        }
+        case 8: 
+        {
+            connections.addConnect(groupOfPipe,groupOfKs);
         }
         case 0:
         {
