@@ -26,7 +26,7 @@ istream& operator >> (istream& in, Pipe& pipe)
     in.ignore();
     getline(in, pipe.name);
     cout << "Type lenght:";
-    pipe.length = getCorrectNumber(50., 200.);
+    pipe.length = getCorrectNumber(5., 200.);
     cout << "Type diameter(1-500,2-700,3-1000,4-1700):";
     int numOfDim = getCorrectNumber(1, 4);
     pipe.diameter = (numOfDim == 1 ? 500 : numOfDim == 2 ? 700 : numOfDim == 3 ? 1000 : 1400);

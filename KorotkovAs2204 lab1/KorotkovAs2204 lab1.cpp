@@ -223,14 +223,19 @@ void deleteKS(unordered_map<int, KS>& groupOfKs, unordered_set<int>& id)
         if (choose == 1)
         {
             for (int i : id)
+            {
                 groupOfKs.erase(i);
+                connections.deleteByVer(i);
+            }
         }
         else
         {
             unordered_set<int>::iterator itr;
             while (1)
             {
-                groupOfKs.erase(getCorrectID(id));
+                int i = getCorrectID(id);
+                groupOfKs.erase(i);
+                connections.deleteByVer(i);
                 cout << "you want to stop? (1 yes) (2 No)" << endl;
                 if (id.size() == 0)
                     break;
@@ -243,7 +248,10 @@ void deleteKS(unordered_map<int, KS>& groupOfKs, unordered_set<int>& id)
     else
     {
         for (int i : id)
+        {
             groupOfKs.erase(i);
+            connections.deleteByVer(i);
+        }
     }
 }
 void ShowEditKs(unordered_map<int, KS>& groupOfKs)
@@ -318,14 +326,19 @@ void deletePipe(unordered_map<int, Pipe>& groupOfPipe, unordered_set<int>& id)
         if (choose == 1)
         {
             for (int i : id)
+            {
                 groupOfPipe.erase(i);
+                connections.deleteByLine(i);
+            }
         }
         else
         {
             unordered_set<int>::iterator itr;
             while (1)
             {
-                groupOfPipe.erase(getCorrectID(id));
+                int i = getCorrectID(id);
+                groupOfPipe.erase(i);
+                connections.deleteByLine(i);
                 cout << "you want to stop? (1 yes) (2 No)" << endl;
                 if (id.size() == 0)
                     break;
@@ -338,7 +351,10 @@ void deletePipe(unordered_map<int, Pipe>& groupOfPipe, unordered_set<int>& id)
     else
     {
         for (int i : id)
+        {
+            connections.deleteByLine(i);
             groupOfPipe.erase(i);
+        }
     }
 }
 void ShowEditPipe(unordered_map<int, Pipe>& groupOfPipe)
@@ -373,7 +389,7 @@ int main()
     while (1) 
     {
         PrintMenu();
-        switch (getCorrectNumber(0,9))
+        switch (getCorrectNumber(0,10))
         {
         case 1:
         {
@@ -440,7 +456,9 @@ int main()
                 fout << KS::MaxId<<endl;
                 for (auto &ks:groupOfKs)
                     ks.second.SaveKS(fout);
+                connections.SaveConnection(fout);
                 fout.close();
+
             }
             else
             {
@@ -461,25 +479,31 @@ int main()
                 int countOfKS;
                 int ksMaxId;
                 int pipeMaxId;
+                int countOfConnections;
 
                 fin >> countOfPipe;
-                fin >> ksMaxId;
+                fin >> pipeMaxId;
                 while (countOfPipe--)
                 {
                     Pipe pipe;
                     pipe.LoadPipes(fin);
                     groupOfPipe.insert({ pipe.getId(),pipe });
                 }
-                Pipe::MaxId = ksMaxId;
+                Pipe::MaxId = pipeMaxId;
                 fin >> countOfKS;
-                fin >> pipeMaxId;
+                fin >> ksMaxId;
                 while (countOfKS--)
                 {
                     KS ks;
                     ks.LoadKS(fin);
                     groupOfKs.insert({ks.getId(), ks});
                 }
-                KS::MaxId = pipeMaxId;
+                KS::MaxId = ksMaxId ;
+                fin >> countOfConnections;
+                while (countOfConnections--)
+                {
+                    connections.LoadConnection(fin);
+                }
                 fin.close();
             }
             else
@@ -489,10 +513,23 @@ int main()
         case 8: 
         {
             connections.addConnect(groupOfPipe,groupOfKs);
+            break;
         }
         case 9:
         {
             connections.topologicalSort();
+            break;
+        }
+        case 10:
+        {
+            int start;
+            int finish;
+            cout << "Input start Vertex";
+            cin >> start;
+            cout << "Intput finish vertex";
+            cin >> finish;
+            connections.shortestPath(start, finish, groupOfPipe);
+            break;
         }
         case 0:
         {

@@ -12,6 +12,9 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <stdlib.h>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -29,13 +32,19 @@ void Connection::addConnect(unordered_map<int, Pipe>& groupOfPipe,
 				cout << "id: " << ks.first << endl;
 				avaibleIds.insert(ks.first);
 			}
-
 			int indexFirst;
 			int indexSecond;
-			cout << "choose first ks" << endl;
-			indexFirst = getCorrectID(avaibleIds);
-			cout << "choose second ks" << endl;
-			indexSecond = getCorrectID(avaibleIds);
+			while (true)
+			{
+				cout << "choose first ks" << endl;
+				indexFirst = getCorrectID(avaibleIds);
+				cout << "choose second ks" << endl;
+				indexSecond = getCorrectID(avaibleIds);
+				if (indexFirst != indexSecond)
+					break;
+				else
+					cout << "type different ids"<<endl;
+			}
 			cout << "Choose pipe diameter:" << endl
 				<< "1. 500" << endl
 				<< "2. 700" << endl
@@ -48,10 +57,21 @@ void Connection::addConnect(unordered_map<int, Pipe>& groupOfPipe,
 			{
 				if (pipe.second.diameter == diameter)
 				{
-					cout << "id: " << pipe.first << endl;
 					avaibleIds.insert(pipe.first);
 				}
 			}
+			set<int> id;
+			for (auto ids : connections)
+			{
+				id.insert(ids.second);
+			}
+			for (auto i:id)
+			{
+				auto iter = find(avaibleIds.begin(), avaibleIds.end(), i);
+				avaibleIds.erase(iter);
+			}
+			for (auto i : avaibleIds)
+				cout << "ids" << i << " ";
 			if (avaibleIds.size() == 0)
 			{
 				cout << "There is no pipes with same diameter.\n\nWould you like to add some?" << endl
@@ -68,14 +88,22 @@ void Connection::addConnect(unordered_map<int, Pipe>& groupOfPipe,
 					pipe.diameter = diameter;
 					cout << "Is this pipe in repair?(Yes-1,No-0)";
 					pipe.repair = getCorrectNumber(0, 1);
+					avaibleIds.insert(pipe.getId());
 				}
 				else
 					break;
 			}
 			cout << "Choose pipe";
 			num = getCorrectID(avaibleIds);
-
-			connections.insert({ make_pair(indexFirst, indexSecond) , num });
+			cout << "Pipe directed in one direction?(1. Yes 2. No)" << endl;
+			int choose=getCorrectNumber(1, 2);
+			if (choose==1)
+				connections.insert({ make_pair(indexFirst, indexSecond) , num });
+			else
+			{
+				connections.insert({ make_pair(indexFirst, indexSecond) , num });
+				connections.insert({ make_pair(indexSecond, indexFirst) , num });
+			}
 			break;
 		}
 		else
@@ -153,4 +181,109 @@ void Connection::viewConnection()
 {	
 	for (auto con : connections)
 		cout << "Begin of KS id: " << con.first.first << " End of KS id: " << con.first.second << " id of Pipe: " << con.second<<endl;
+}
+void Connection::SaveConnection(ofstream& fout) 
+{
+	fout << connections.size()<<endl;
+	for (auto&con: connections)
+	{
+		fout << con.first.first << endl;
+		fout << con.first.second << endl;
+		fout << con.second << endl;
+	}
+}
+void Connection::LoadConnection(ifstream& fin)
+{
+	int startId;
+	int endId;
+	int PipeId;
+	fin >> startId;
+	fin >> endId;
+	fin >> PipeId;
+	connections.insert(pair<pair< int, int >, int >( {startId, endId}, PipeId ));
+}
+void Connection::deleteByLine(int id)
+{
+	map<pair< int, int >,int>::iterator it=connections.begin();
+	while (it != connections.end())
+	{
+		if (it->second == id)
+		{
+			connections.erase(it);
+			it = connections.begin();
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+}
+void Connection::deleteByVer(int id)
+{
+	map<pair< int, int >, int>::iterator it= connections.begin();
+	while (it != connections.end())
+	{
+		if ((it->first).first == id or (it->first).second == id)
+		{
+			connections.erase(it);
+			it = connections.begin();
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+void Connection::shortestPath(int current,int finish, unordered_map<int, Pipe>& groupOfPipe)
+{
+	int start = current;
+	set<int> avaibleVetex;
+	for (auto& i : connections)
+	{
+		avaibleVetex.insert(i.first.second);
+		avaibleVetex.insert(i.first.first);
+	}
+	map<int, double> lenghToEdges;
+	for (auto i : avaibleVetex)
+		lenghToEdges[i] = numeric_limits<double>::max();
+	map<int, vector<int> > graph;
+	for (auto& edges : connections)
+		graph[edges.first.first].push_back(edges.first.second);
+	lenghToEdges[current] = 0;
+	while (true)
+	{
+		for (auto incidentVertex : graph[current])
+		{
+			lenghToEdges[incidentVertex] = min(lenghToEdges[incidentVertex], 
+				lenghToEdges[current]+
+				groupOfPipe[connections[pair<int, int>(current, incidentVertex)]].length);
+		}
+		graph.erase(current);
+		map<int, vector<int>>::iterator it = graph.begin();
+		while (it != graph.end())
+		{
+			(graph[it->first]).erase(remove((it->second).begin(), (it->second.end()), current), (it->second).end());
+			++it;
+		}
+		
+		double minn = numeric_limits<double>::max();
+		avaibleVetex.erase(current);
+		for (auto i : avaibleVetex)
+			minn = min(minn, lenghToEdges[i]);
+		for (auto i:lenghToEdges)
+		{
+			if (i.second == minn and i.first != current)
+			{
+				current = i.first;
+				break;
+
+			}
+		}
+		if (avaibleVetex.size() == 0)
+			break;
+	}
+	for (auto i : lenghToEdges)
+		if (i.first==finish)
+			cout <<"distance betwen " << start <<" and "<<finish << " : " << i.second << endl;
 }
